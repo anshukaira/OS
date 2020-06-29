@@ -1,7 +1,7 @@
-##OS Project
+## OS Project
 
 
-######Use shell script for `generating the file list` in a shell function
+###### Use shell script for `generating the file list` in a shell function
 
 **Contents of files :**
  -file.sh : simple for loop used for generating file list
