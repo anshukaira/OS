@@ -1,0 +1,147 @@
+#!/bin/bash
+
+#-h|--help -w|--where -d|--directory -f|--file
+#-t|--type
+#-s|--size -l|--list
+
+OIFS="$IFS"
+IFS=$'\n'
+
+where="."
+directory=0
+file=0
+type=0
+size=0
+list=0
+
+for flag in $@
+do
+	case $flag in
+		-h|--help)
+			echo "Command [-option]"
+			echo "Flags/Options : "
+			echo "-d or --directory       : List of directories"
+			echo "-f or --file            : List of files"
+			echo "-t or --type            : Type of File"
+			echo "-s or --size            : Size of File"
+			echo "-l or --list            : full list view"
+			echo "-w=PATH or --where=PATH : Find in PATH"
+			exit 0;
+			;;
+		-w=*|--where=*)
+			where=$(echo $flag |cut -d '=' -f 2 )
+			;;
+		-d|--directory)
+			directory=1
+			;;
+		-f|--file)
+			file=1
+			;;
+		-t|--type)
+			type=1		
+			;;
+		-s|--size)
+			size=1
+			;;
+		-l|--list)
+			list=1
+			;;
+		*)
+			echo "command $flag not found"
+			echo "Use -h or --help to know more about valid arguments"
+			exit -1;
+	esac
+done
+
+cd $where
+if [ ! $? -eq 0 ]
+then
+	exit 1
+fi
+
+
+if [ $list -eq 1 ]
+then
+	ls -l
+	exit 0
+fi
+
+count=0
+
+
+
+for FILE in *
+do	
+	if [ $[ $file^$directory ] -eq 0 ]
+	then
+		(( count++ ))
+		echo -n "$FILE|"
+		if [ -d $FILE ]
+		then
+			echo -n -e "Directory|"
+		else
+			echo -n -e "File|"
+		fi
+	else
+		if [ -d $FILE ]
+		then
+			if [ $directory -eq 1 ]
+			then
+				(( count++ ))
+				echo -n "$FILE|"
+			else
+				continue
+			fi
+		else
+			if [ $file -eq 1 ]
+			then
+				(( count++ ))
+				echo -n "$FILE|" 
+			else
+				continue
+			fi
+		fi
+	fi
+	
+	if [ $type -eq 1 ]
+	then
+		if [ -r $FILE ]	
+		then
+			echo -n -e "read|"
+		else
+			echo -n " |"
+		fi
+		if [ -w $FILE ]	
+		then
+			echo -n -e "write|"	
+		else
+			echo -n " |"
+		fi
+		if [ -x $FILE ]	
+		then
+			echo -n -e "exec|"	
+		else
+			echo -n " |"
+		fi
+	fi	
+	
+	if [ $size -eq 1 ]
+	then
+		if [ ! -d $FILE ]
+		then
+			echo -n -e "$(wc -c $FILE  2> /dev/null | cut -d ' ' -f 1)(bytes)|"
+		fi	
+	fi
+	echo -e '\n'
+done > >( column -t -s "|" )
+
+
+wait $!
+
+echo "Total Result : $count"
+
+
+
+
+
+IFS=$OIFS
